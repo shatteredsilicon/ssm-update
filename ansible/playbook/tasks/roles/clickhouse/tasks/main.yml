@@ -28,6 +28,7 @@
     state: directory
     owner: root
     group: pmm
+  tags: srv_init
 
 - name: Import clickhouse repo GPG key
   rpm_key:

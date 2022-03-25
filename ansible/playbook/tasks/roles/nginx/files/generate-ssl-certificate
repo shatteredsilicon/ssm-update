@@ -2,21 +2,21 @@
 
 set -o errexit
 
-mkdir -p /srv/nginx
+mkdir -p /etc/nginx/ssl
 
-if [ ! -e /srv/nginx/dhparam.pem ]; then
-    openssl dhparam -out /srv/nginx/dhparam.pem 2048
+if [ ! -e /etc/nginx/ssl/dhparam.pem ]; then
+    openssl dhparam -out /etc/nginx/ssl/dhparam.pem 2048
 fi
 
-if [ ! -e /srv/nginx/ca-certs.pem ]; then
+if [ ! -e /etc/nginx/ssl/ca-certs.pem ]; then
     # Fetch letsencrypt chain
-    curl https://letsencrypt.org/certs/isrgrootx1.pem                          > /srv/nginx/ca-certs.pem
-    curl https://letsencrypt.org/certs/lets-encrypt-x1-cross-signed.pem       >> /srv/nginx/ca-certs.pem
-    curl https://letsencrypt.org/certs/letsencryptauthorityx1.pem             >> /srv/nginx/ca-certs.pem
-    curl https://www.identrust.com/certificates/trustid/root-download-x3.html >> /srv/nginx/ca-certs.pem
+    curl https://letsencrypt.org/certs/isrgrootx1.pem                          > /etc/nginx/ssl/ca-certs.pem
+    curl https://letsencrypt.org/certs/lets-encrypt-x1-cross-signed.pem       >> /etc/nginx/ssl/ca-certs.pem
+    curl https://letsencrypt.org/certs/letsencryptauthorityx1.pem             >> /etc/nginx/ssl/ca-certs.pem
+    curl https://www.identrust.com/certificates/trustid/root-download-x3.html >> /etc/nginx/ssl/ca-certs.pem
 fi
 
-if [ ! -e /srv/nginx/certificate.conf ]; then
+if [ ! -e /etc/nginx/ssl/certificate.conf ]; then
     echo "
 [ req ]
 distinguished_name = req_distinguished_name
@@ -24,12 +24,12 @@ prompt             = no
 
 [ req_distinguished_name ]
 O                  = Main Org.
-" > /srv/nginx/certificate.conf
+" > /etc/nginx/ssl/certificate.conf
 fi
 
-if [ ! -e /srv/nginx/certificate.key -o ! -e /srv/nginx/certificate.crt ]; then
+if [ ! -e /etc/nginx/ssl/certificate.key -o ! -e /etc/nginx/ssl/certificate.crt ]; then
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-        -keyout /srv/nginx/certificate.key \
-        -out    /srv/nginx/certificate.crt \
-        -config /srv/nginx/certificate.conf
+        -keyout /etc/nginx/ssl/certificate.key \
+        -out    /etc/nginx/ssl/certificate.crt \
+        -config /etc/nginx/ssl/certificate.conf
 fi

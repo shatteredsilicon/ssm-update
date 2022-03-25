@@ -9,6 +9,7 @@
   loop:
     - /srv/grafana
     - /srv/grafana/plugins
+  tags: srv_init
 
 - name: Set Grafana folder for plugins on /srv partition for all users
   lineinfile:
