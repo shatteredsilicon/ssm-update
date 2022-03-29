@@ -53,6 +53,7 @@
     - name: Create grafana config
       include_role:
         name: grafana
+      tags: srv_init
 
     # Start the services
     - name: Supervisord start        | Start supervisord service for AMI/OVF
@@ -165,10 +166,12 @@
     - name: Install nginx
       include_role:
         name: nginx
+      tags: srv_init
 
     - name: Install clickhouse
       include_role:
         name: clickhouse
+      tags: srv_init
 
     # Fix things that should be fixed before restarts.
 
@@ -238,7 +241,6 @@
 
     - name: Create empty configuration file for VictoriaMetrics
       file: path=/etc/victoriametrics-promscrape.yml state=touch owner=pmm group=pmm
-      tags: srv_init
 
     - name: Reread supervisord configuration again
       command: supervisorctl reread

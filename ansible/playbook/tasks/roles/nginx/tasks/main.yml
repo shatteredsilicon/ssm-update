@@ -41,6 +41,7 @@
   stat:
     path: /srv/nginx/certificate.crt
   register: certificate_file
+  tags: srv_init
 
 - name: NGINX SSL Certificate      | Generate certificate
   when: not certificate_file.stat.exists

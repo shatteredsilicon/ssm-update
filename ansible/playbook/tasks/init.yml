@@ -7,3 +7,4 @@
     - name: Run initializaion role
       include_role:
         name: initialization
+      tags: srv_init
