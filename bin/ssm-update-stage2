@@ -12,7 +12,7 @@ get_latest_version() {
         | awk -F'.' '{print $1}' \
         | awk '{ if ( $2 == "v1" ) print "v01" }')
 
-    find $RPM_ROOT/usr/share/pmm-update/ansible \
+    find $RPM_ROOT/usr/share/ssm-update/ansible \
         -mindepth 1 \
         -maxdepth 1 \
         -type d \

@@ -39,7 +39,7 @@ check_pid() {
 }
 
 failover_update() {
-    find /var/tmp/ -name "pmm-tmp"  | xargs rm -rf
+    find /var/tmp/ -name "ssm-tmp"  | xargs rm -rf
 
 	# don't replace tabs by spaces in this block, due to '<<-EOF' syntax
 	cat - <<-EOF > ${UPDATE_DIR}/yum.conf
@@ -49,56 +49,34 @@ failover_update() {
 		cachedir = ${UPDATE_DIR}/cache
 		persistdir = ${UPDATE_DIR}/cache
 
-		[pmm-tmp]
-		name = pmm-tmp
-		baseurl = http://repo.percona.com/pmm/7/RPMS/x86_64/
+		[ssm-tmp]
+		name = ssm-tmp
+		baseurl = https://dl.shatteredsilicon.net/$releasever/ssm/RPMS/$basearch/
 		enabled = 1
 		gpgcheck = 1
-		gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Percona
+		gpgkey = https://dl.shatteredsilicon.net/$releasever/ssm/RPM-GPG-KEY-SSM-EL$releasever
 	EOF
 
     pushd $UPDATE_DIR
-        rm -rf usr pmm-update-*.rpm || :
-        yumdownloader --config=${UPDATE_DIR}/yum.conf --destdir=$UPDATE_DIR pmm-update
-        rpm2cpio $(/bin/ls -t pmm-update-*.rpm | head -1) | cpio -id
+        rm -rf usr ssm-update-*.rpm || :
+        yumdownloader --config=${UPDATE_DIR}/yum.conf --destdir=$UPDATE_DIR ssm-update
+        rpm2cpio $(/bin/ls -t ssm-update-*.rpm | head -1) | cpio -id
     popd
-}
-
-get_latest_version() {
-    local RPM_ROOT=$1
-
-    CURRENT_MAIN_VERSION=$(grep '# v' $UPDATE_DIR/main.yml \
-        | awk -F'.' '{print $1}' \
-        | awk '{ if ( $2 == "v1" ) print "v01" }')
-
-    find $RPM_ROOT/usr/share/pmm-update/ansible \
-        -mindepth 1 \
-        -maxdepth 1 \
-        -type d \
-        | sort \
-        | grep "$CURRENT_MAIN_VERSION" \
-        | tail -1
 }
 
 main() {
     local RPM_ROOT=$1
 
-    local PLAYBOOK=$(get_latest_version $RPM_ROOT)/main.yml
-    diff $PLAYBOOK $UPDATE_DIR/main.yml
-
-    yum -y update percona-release
-    rpm --import /etc/pki/rpm-gpg/PERCONA-PACKAGING-KEY
-    yum -y --enablerepo=pmm clean all || :
-    yum -y --disablerepo='*' --enablerepo=pmm install pmm-update && EC=$? || EC=$?
+    rhel_version=$(rpm -q --qf "%{VERSION}" -f /etc/redhat-release | grep -Eo '^[0-9]*')
+    rpm --import https://dl.shatteredsilicon.net/${rhel_version}/ssm/RPM-GPG-KEY-SSM-EL${rhel_version}
+    yum -y --enablerepo=ssm clean all || :
+    yum -y --disablerepo='*' --enablerepo=ssm install ssm-update && EC=$? || EC=$?
     if [ "x$EC" != "x0" ]; then
         failover_update
         RPM_ROOT=$UPDATE_DIR
     fi
 
-    local PLAYBOOK=$(get_latest_version $RPM_ROOT)/main.yml
-    diff $PLAYBOOK $UPDATE_DIR/main.yml
-
-    echo DONE
+    exec $RPM_ROOT/usr/bin/ssm-update-stage2 $RPM_ROOT
 }
 
 check_root
